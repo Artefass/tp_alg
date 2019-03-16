@@ -52,7 +52,12 @@ public:
             result += (b.x - a.x) * (b.y + a.y) / 2.0;     
         }
 
-        return -result;
+        Point2D a = arrayPoints[size-1];
+        Point2D b = arrayPoints[0];
+
+        result += (b.x - a.x) * (b.y + a.y) / 2.0;
+
+        return result;
     }
 };
 
