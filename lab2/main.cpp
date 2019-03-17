@@ -1,5 +1,36 @@
 #include <iostream>
 
+void findInterval(int *array, int size, int element, int &begin, int &end) {
+
+    while (end != size - 1 && element > array[end]) {
+        begin = end;
+        end *= 2;
+        end = ( end < size - 1 ) ? end : size - 1;
+    }
+}
+
+void findPlaceBetweenTwoNearestElements(int *array, int element, int &firstIndex, int &secondIndex) {
+
+    while (secondIndex - firstIndex > 1) {
+        int middle = (firstIndex + secondIndex) / 2;
+
+        if (array[middle] < element) {
+            firstIndex = middle;
+        } else {
+            secondIndex = middle;
+        }
+    }
+}
+
+int chooseNearestBetwenTwoIndex(int *array, int element, int firstIndex, int secondIndex) {
+
+    if ( abs(element - array[secondIndex]) < abs(element - array[firstIndex]) ) {
+        return secondIndex;
+    } else {
+        return firstIndex;
+    }
+}
+
 int* findCloseElementsIndex(int *array1, int size1, int *array2, int size2) {
     
     int *arrayOfIndex = new int[size2];
@@ -8,27 +39,9 @@ int* findCloseElementsIndex(int *array1, int size1, int *array2, int size2) {
         int end = ( size1 > 2 ) ? 2 : size1;
         int begin = 0;
 
-        while (end != size1 - 1 && array2[i] > array1[end]) {
-            begin = end;
-            end *= 2;
-            end = ( end < size1 - 1 ) ? end : size1 - 1;
-        }
-
-        while (end - begin > 1) {
-            int middle = (end + begin) / 2;
-
-            if (array1[middle] < array2[i]) {
-                begin = middle;
-            } else {
-                end = middle;
-            }
-        }
-
-        if ( abs(array2[i] - array1[end]) < abs(array2[i] - array1[begin]) ) {
-            arrayOfIndex[i] = end;
-        } else {
-            arrayOfIndex[i] = begin;
-        }
+        findInterval(array1, size1, array2[i], begin, end);
+        findPlaceBetweenTwoNearestElements(array1, array2[i], begin, end);
+        arrayOfIndex[i] = chooseNearestBetwenTwoIndex(array1, array2[i], begin, end);
     }
 
     return arrayOfIndex;
