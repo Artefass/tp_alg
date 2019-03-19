@@ -3,9 +3,6 @@
 #include <functional>
 #include <cassert>
 
-#define min(a,b) ((a) < (b) ? (a) : (b))
-#define max(a,b) ((a) > (b) ? (a) : (b))
-
 template <typename T, typename Comporator>
 void Merge(const T *firtsArray, int fLen, const T *secondArray, int sLen, T *mergeArray, Comporator lessThan) {
     
@@ -59,86 +56,6 @@ struct DataTime
     int month = 0;
     int year = 0;
 
-    DataTime operator-(DataTime &other) {
-        DataTime diff(*this);
-
-        diff.day -= other.day;
-        while ( diff.day < 0 ) {
-            diff.month--;
-            diff.day += diff.daysInMonth();
-        }
-
-        diff.month -= other.month;
-        while ( diff.month < 0) {
-            diff.year--;
-            diff.month += 12;
-        }
-
-        diff.year -= other.year;
-
-        return diff;
-    }
-
-    int daysInMonth() {
-        return daysInMonth(month);
-    }
-
-    int daysInMonth(int aMonth) {
-        int days = 0;
-
-        if ( aMonth == 2 ) {
-            if ( year % 4 == 0 && year % 100 != 0 ) {
-                days = 29;
-            } else if ( year % 400 == 0 ) {
-                days = 29;
-            } else {
-                days = 28;
-            }
-        } else {
-            days = ( ( aMonth % 8 + aMonth / 8 ) % 2 == 0 ) ? 30 : 31;
-        }
-
-        return days;
-    }
-
-    int allDays() {
-        int days = 0;
-
-        days += year * 365;
-        
-        for (int i = 1; i <= month; i++) {
-            days += daysInMonth(i);
-        }
-
-        days += day;
-
-        return days;
-    }
-
-    // уменьшаем дату на день
-    DataTime& operator--() {
-        
-        if ( day > 1 ){
-            day--;
-        } else if ( month > 1 ) {
-            month--;
-            day = this->daysInMonth();
-        } else {
-            day = 31;
-            month = 12;
-            year--;
-        }
-
-        return *this;
-    }
-
-    DataTime operator--(int) {
-        
-        DataTime tmp(*this);
-        operator--();
-        return tmp;
-    }
-
     bool operator==(const DataTime &time) const {
         return day == time.day && month == time.month && year == time.year;
     }
@@ -159,10 +76,8 @@ struct DataTimeMarker
     DataTime time = DataTime();
     char event; // имеет два значения ("а" - adulthood (взрослый) и "p" - pensioner (пенсионер))
 
-    void updateDataTimeMarker(DataTime aTime, char aEvent) {
-        time = aTime;
-        event = aEvent;
-    }
+    DataTimeMarker() {};
+    DataTimeMarker(DataTime _time, char _event) : time(_time), event(_event) {};
 
     bool operator< (const DataTimeMarker &other) const {
         if ( time == other.time ) {
@@ -176,7 +91,6 @@ struct DataTimeMarker
 DataTime OldTime(const DataTime &birthday, const DataTime &death) {
     DataTime oldTime(birthday);
     oldTime.year += 80;
-    //oldTime--;
     if (oldTime < death) {
         return oldTime;
     } else {
@@ -192,9 +106,6 @@ DataTime AdultTime(const DataTime &birthday) {
 
 bool CanAttendMeeting(DataTime &birthday, DataTime &death) {
     DataTime adultTime = AdultTime(birthday);
-    
-    //std::cout << "day: " << birthday.day << " " << birthday.month << " " << birthday.year << std::endl;
-
     return adultTime < death;
 }
 
@@ -223,7 +134,7 @@ int main() {
     int len = 0;
     DataTime birthday, death;
     DataTimeMarker *arrayDTM = nullptr;
-    int peoples = 0;
+    int visitors = 0;
 
     std::cin >> len;
     arrayDTM = new DataTimeMarker[len * 2];
@@ -232,27 +143,17 @@ int main() {
         std::cin >> birthday.day >> birthday.month >> birthday.year;
         std::cin >> death.day    >> death.month    >> death.year;
 
-        //std::cout << "Birthday: " << birthday.day << " " << birthday.month << " " << birthday.year << std::endl;
-        //std::cout << "Death: " << death.day << " " << death.month << " " << death.year << std::endl;
-
-        //DataTimeLife diff = death - birthday;
-        //std::cout << "Diff: " << diff.day << " " << diff.month << " " << diff.year << std::endl;
-
         if ( CanAttendMeeting(birthday, death) ) {
-            arrayDTM[2 * peoples].updateDataTimeMarker(AdultTime(birthday), 'a'); // есть баг с високосным годом
-            arrayDTM[2 * peoples + 1].updateDataTimeMarker(OldTime(birthday, death), 'p');
-            peoples++;
+            arrayDTM[2 * visitors]     = DataTimeMarker(AdultTime(birthday), 'a');
+            arrayDTM[2 * visitors + 1] = DataTimeMarker(OldTime(birthday, death), 'p');
+            visitors++;
         }
     }
 
-    MergeSort(arrayDTM, peoples * 2);
-    // for (int i = 0; i < peoples * 2; i++) {
-    //     std::cout << "[" << i << "]" <<" marker " << arrayDTM[i].event << " day: " << arrayDTM[i].time.day 
-    //               << " month: " << arrayDTM[i].time.month << " year: " << arrayDTM[i].time.year << std::endl;  
-    // }
-    std:: cout << FindMaxContemporaries(arrayDTM, peoples * 2);
+    MergeSort(arrayDTM, visitors * 2);
+    std:: cout << FindMaxContemporaries(arrayDTM, visitors * 2);
 
-    delete[] arrayDTM;
+    delete [] arrayDTM;
 
     return 0;
 }
