@@ -19,24 +19,22 @@ public:
     ~Heap();
 
     void insert( T element );
-    // почему нормально не определяется функция с полным именем "delete"
-    void delet( int i );
                                                                                 ////
-    T extractMax() {
-        if ( isEmpty ) {
-            return nullptr;
-        } else {
-            T tmp = _arr[0];
+    T extractMin() {
+        assert( !isEmpty() );
+    
+        T tmp = _arr[0];
+        _size--;
 
-            _arr[0] = _arr[_size - 1];
-            _size--;
-
-            siftDown(0);
-            return tmp;
+        if ( !isEmpty () ) {
+            _arr[0] = _arr[_size];
+            siftDown(0);    
         }
+        
+        return tmp;
     }
 
-    T peekMax() const {
+    T peekMin() const {
         assert( !isEmpty() );
 
         return _arr[0];
@@ -100,19 +98,6 @@ void Heap<T>::insert( T element ) {
 }
 
 template <typename T>
-void Heap<T>::delet( int i ) {
-    assert( 0 <= i && i < _size );
-
-    if ( i == _size - 1 ) {
-        _size--;
-    } else {
-        _arr[i] = _arr[_size - 1];
-        _size--;
-        siftDown( i );
-    }
-}
-
-template <typename T>
 void Heap<T>::resize() {
     T *tmpArr = (T*)realloc(_arr, sizeof(T) * _capacity * 2);
     if ( tmpArr == nullptr ) {
@@ -132,24 +117,26 @@ void Heap<T>::buildHeap() {
 
 template <typename T>
 void Heap<T>::siftDown( int i ) {
+    // std::cout << "i = " << i << std::endl;
+    // std::cout << "size = " << _size << std::endl;
     assert( i >= 0 && i < _size);
 
     int left  = 2 * i + 1;
     int right = 2 * i + 2;
 
-    int largest = i;
+    int smallest = i;
 
-    if ( left < _size && _arr[i] < _arr[left]) {
-        largest = left;
+    if ( left < _size && _arr[i] > _arr[left]) {
+        smallest = left;
     }
 
-    if ( right < _size && _arr[i] < _arr[right] ) {
-        largest = right;
+    if ( right < _size && _arr[i] > _arr[right] ) {
+        smallest = right;
     }
 
-    if ( largest != i ) {
-        std::swap( _arr[largest], _arr[i] );
-        siftDown( largest );
+    if ( smallest != i ) {
+        std::swap( _arr[smallest], _arr[i] );
+        siftDown( smallest );
     }
 }
 
@@ -163,7 +150,7 @@ void Heap<T>::siftUp( int i ) {
 
     int parent = (i - 1) / 2;
 
-    if ( _arr[parent] < _arr[i] ) {
+    if ( _arr[parent] > _arr[i] ) {
         std::swap( _arr[parent], _arr[i] );
         siftUp( parent );
     }
@@ -181,6 +168,10 @@ struct TimeTrainPoint
 
     bool operator<(const TimeTrainPoint& other) {
         return departureTime < other.departureTime;
+    }
+
+    bool operator>(const TimeTrainPoint& other) {
+        return departureTime > other.departureTime;
     }
 };
 
@@ -205,15 +196,13 @@ int main() {
     for (int i = 0; i < ntrains; i++) {
         std::cin >> arrivalTime >> departureTime;
 
-        for (int i = trains.size() - 1; i >= 0; i--) {
-            if ( trains[i].departureTime < arrivalTime ) {
-                trains.delet( i );
-            }
+        while ( !trains.isEmpty() && trains.peekMin().departureTime < arrivalTime ) {
+            trains.extractMin();
         }
 
         trains.insert(TimeTrainPoint(arrivalTime, departureTime));
 
-        //print_trains(trains);
+        print_trains(trains);
 
         if (maxTrains < trains.size()) {
             maxTrains = trains.size();
