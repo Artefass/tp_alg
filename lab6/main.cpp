@@ -1,26 +1,56 @@
 #include <utility>
 #include <iostream>
+#include <algorithm>
 
-int partition(int *arr, int size, int k) {
+using namespace std;
+
+int median3Index(const int *arr, int i, int j, int k) {
+    if ( arr[i] > arr[j] ) {
+        if ( arr[j] > arr[k] ) {
+            return j;
+        } else if ( arr[i] > arr[k] ) {
+            return k;
+        } else {
+            return i;
+        }
+    } else {
+        if ( arr[i] > arr[k] ) {
+            return i;
+        } else if ( arr[j] > arr[k] ) {
+            return k;
+        } else {
+            return j;
+        }
+    }
+}
+
+int partition( int *arr, int size, int k) {
     
     int i,j;
+    int middle;
 
     int start = 0;
     int end   = size - 1;
 
     while ( end - start > 0 ) {
-        int middle = (arr[start] + arr[(end + start) / 2] + arr[end]) / 3;
-        for ( i = end, j = end; j >= start; j-- ) {
-            if ( arr[j] > middle ) {
+        middle = median3Index(arr, start, (end + start) / 2, end);
+        std::swap(arr[middle], arr[start]);
+
+        for ( i = end, j = end; j > start; j-- ) {
+            if ( arr[j] >= arr[start] ) {
                 std::swap(arr[j], arr[i]);
                 i--;
             }
         }
 
-        if ( k > i ) {
+        std::swap(arr[i], arr[start]);
+
+        if ( k == i ) {
+            break;
+        } else if ( k > i ) {
             start = i + 1;
         } else {
-            end   = i;
+            end   = i - 1;
         }
     }
 
