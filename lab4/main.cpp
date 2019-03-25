@@ -65,9 +65,6 @@ private:
     void resize();
 };
 
-// template <typename T>
-// Heap<T>::Heap( int capacity ): _capacity(capacity), _size(0), _arr(new T[capacity]) {};
-
 template <typename T>
 Heap<T>::Heap( const T* &arr) {
     _size = sizeof( arr ) / sizeof( arr[0] );
@@ -117,8 +114,6 @@ void Heap<T>::buildHeap() {
 
 template <typename T>
 void Heap<T>::siftDown( int i ) {
-    // std::cout << "i = " << i << std::endl;
-    // std::cout << "size = " << _size << std::endl;
     assert( i >= 0 && i < _size);
 
     int left  = 2 * i + 1;
@@ -126,11 +121,11 @@ void Heap<T>::siftDown( int i ) {
 
     int smallest = i;
 
-    if ( left < _size && _arr[i] > _arr[left]) {
+    if ( left < _size && _arr[smallest] > _arr[left]) {
         smallest = left;
     }
 
-    if ( right < _size && _arr[i] > _arr[right] ) {
+    if ( right < _size && _arr[smallest] > _arr[right] ) {
         smallest = right;
     }
 
@@ -201,8 +196,6 @@ int main() {
         }
 
         trains.insert(TimeTrainPoint(arrivalTime, departureTime));
-
-        print_trains(trains);
 
         if (maxTrains < trains.size()) {
             maxTrains = trains.size();
