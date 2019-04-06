@@ -3,7 +3,7 @@
 #include <vector>
 #include <cassert>
 
-#define BASE_SIZE      4
+#define BASE_SIZE      8
 #define RESIZE_FACTOR  2
 #define FILL_FACTOR    (3.0 / 4.0)
 
