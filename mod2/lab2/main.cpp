@@ -6,10 +6,8 @@ struct Node {
     Key  key;
     Node *left;
     Node *right;
-    Node *parent;
 
-    Node(const Key &key): key(key), left(nullptr),
-            right(nullptr), parent(nullptr) {}
+    Node(const Key &key): key(key), left(nullptr), right(nullptr) {}
 };
 
 template <typename Key>
