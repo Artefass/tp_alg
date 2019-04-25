@@ -73,7 +73,7 @@ private:
         node->nodesCount = leftCount + rightCount + 1;
     }
 
-    size_t getBalance( Node *node ) const {
+    int getBalance( Node *node ) const {
         return getHeight(node->right) - getHeight(node->left);
     }
 
@@ -119,7 +119,7 @@ private:
 
             if ( !right )
                 return left;
-            
+
             Node *min = nullptr;
             right = findAndRemoveMin(right, min);
             min->left  = left;
@@ -136,7 +136,7 @@ private:
             return node->right;
         }
 
-        node->left = findAndRemoveMin( node, min );
+        node->left = findAndRemoveMin( node->left, min );
         return doBalanced(node);
     }
 
@@ -214,7 +214,7 @@ int main() {
             tree.Insert(value);
         else
             tree.Remove(-value);
-        std::cout << tree.GetKey(pos);
+        std::cout << tree.GetKey(pos) << std::endl;
     }
 
     return 0;
