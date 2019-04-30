@@ -150,22 +150,27 @@ class Huffman {
 
     struct Node {
         byte ch;
-        size_t weight;
         Node *left,*right;
 
-        explicit Node(size_t weight): ch(0), weight(weight), left(nullptr), right(nullptr){}
-        explicit Node(): ch(0), weight(0), left(nullptr), right(nullptr){}
-        explicit Node(byte ch, size_t weight): ch(ch), weight(weight), left(nullptr), right(nullptr) {}
+        explicit Node(): ch(0), left(nullptr), right(nullptr){}
+        explicit Node(byte ch): ch(ch), left(nullptr), right(nullptr) {}
+    };
+
+    struct NodeWeight {
+        Node  *node;
+        size_t weight;
+
+        NodeWeight(Node *node, size_t weight): node(node), weight(weight){}
     };
 
     class CompareGreaterWeight {
     public:
-        bool operator()(const Node *left, const Node *right) {
-            return left->weight > right->weight;
+        bool operator()(const NodeWeight &left, const NodeWeight &right) {
+            return left.weight > right.weight;
         }
     };
 
-    using priority_queue = std::priority_queue<Node*, std::vector<Node*>, CompareGreaterWeight>;
+    using priority_queue = std::priority_queue<NodeWeight, std::vector<NodeWeight>, CompareGreaterWeight>;
 
 public:
     Huffman(): root(nullptr), symbolsCodes(256) {}
@@ -245,8 +250,9 @@ private:
     {
         for (size_t ch = 0; ch < 256; ch++ ) {
             if ( freqSymbolsAnalisis[ch] > 0 ) {
-                Node *node = new Node(ch, freqSymbolsAnalisis[ch] );
-                priorityQueueSymbols.push(node);
+                Node *node = new Node(ch);
+                NodeWeight newNodeWeight(node, freqSymbolsAnalisis[ch]);
+                priorityQueueSymbols.push(newNodeWeight);
             }
         }
     }
@@ -255,19 +261,23 @@ private:
         assert( !priorityQueueSymbols.empty() );
 
         while (priorityQueueSymbols.size() != 1) {
-            Node *left  = priorityQueueSymbols.top();
+            NodeWeight left = priorityQueueSymbols.top();
             priorityQueueSymbols.pop();
-            Node *right = priorityQueueSymbols.top();
+            NodeWeight right = priorityQueueSymbols.top();
             priorityQueueSymbols.pop();
 
-            size_t weight = left->weight + right->weight;
-            Node *node = new Node(weight);
-            node->left  = left;
-            node->right = right;
-            priorityQueueSymbols.push(node);
+            size_t weight = left.weight + right.weight;
+            Node *node = new Node();
+            node->left  = left.node;
+            node->right = right.node;
+
+            NodeWeight newNodeWeight(node, weight);
+
+            priorityQueueSymbols.push(newNodeWeight);
         }
 
-        root = priorityQueueSymbols.top();
+        NodeWeight lastNodeWeight = priorityQueueSymbols.top();
+        root = lastNodeWeight.node;
         priorityQueueSymbols.pop();
 
         assert(priorityQueueSymbols.empty());
@@ -306,7 +316,7 @@ private:
         } else if ( bit == 1) {
             byte value;
             br.ReadByte(value);
-            node = new Node(value, 0);
+            node = new Node(value);
         } else {
             assert(false);
         }
@@ -340,6 +350,9 @@ void Encode(IInputStream& original, IOutputStream& compressed){
     byte value;
     while (original.Read(value))
         cpOriginal.push_back(value);
+
+    if ( cpOriginal.empty() )
+        return;
 
     hm.BuildCodesVector(cpOriginal);
     hm.SaveTreeToStream(bw);
