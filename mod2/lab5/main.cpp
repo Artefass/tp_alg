@@ -70,7 +70,7 @@ private:
                         // так как в нем сохранен номер последних значащих
                         // бит в декодировании (прим. если 2 то 7 и 6 биты)
                 if (bitCount >= 16) {   // это условие необходимо, чтобы проверить
-                                        // не пуст ли поток данных, переданных для чтения
+                                        // не пуст ли поток данных, переданных для чтения.
                                         // минимальный размер сжатого файла должен быть
                                         // не менее 3 байт (дерево + поток кодированных
                                         // символов + последний байт)
@@ -84,6 +84,8 @@ private:
                         cache   >>= 8 - tailBits;
                         bitCount -= 8 - tailBits;
                     }
+                } else {
+                    throw "Bad file";
                 }
                 mode = END_READING;
             }
@@ -350,9 +352,6 @@ void Encode(IInputStream& original, IOutputStream& compressed){
     byte value;
     while (original.Read(value))
         cpOriginal.push_back(value);
-
-    if ( cpOriginal.empty() )
-        return;
 
     hm.BuildCodesVector(cpOriginal);
     hm.SaveTreeToStream(bw);
