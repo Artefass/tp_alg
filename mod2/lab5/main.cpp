@@ -1,5 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
+///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "Huffman.h"
 
 #include <iostream>
@@ -204,7 +203,19 @@ public:
         return symbolsCodes[ch].bitsCount;
     }
 
-    bool ReadChar( BitReader &br, byte &ch){
+    void SaveCharToStream( BitWriter &bw, byte ch ){
+        size_t code = GetCodeFromVector(ch);
+        size_t bits = GetCodeBitsFromVector(ch);
+
+        while (bits) {
+            bits--;
+            byte bit = (byte)(code >> bits);
+            bw.WriteBit(bit);
+            code %= (1 << bits);
+        }
+    }
+
+    bool ReadChar( BitReader &br, byte &ch ){
         assert( root );
 
         Node *node = root;
@@ -229,7 +240,6 @@ public:
             assert(false);
         }
     }
-
 
 private:
     Node *root;
@@ -356,20 +366,9 @@ void Encode(IInputStream& original, IOutputStream& compressed){
     hm.BuildCodesVector(cpOriginal);
     hm.SaveTreeToStream(bw);
 
-    value = 0;
-    for (size_t i = 0; i < cpOriginal.size(); i++){
-        value = cpOriginal[i];
+    for (size_t i = 0; i < cpOriginal.size(); i++)
+        hm.SaveCharToStream(bw, cpOriginal[i]);
 
-        size_t code = hm.GetCodeFromVector(value);
-        size_t bits = hm.GetCodeBitsFromVector(value);
-
-        while (bits) {
-            bits--;
-            byte bit = (byte)(code >> bits);
-            bw.WriteBit(bit);
-            code %= (1 << bits);
-        }
-    }
     bw.WriteCacheRemainder();
 }
 
