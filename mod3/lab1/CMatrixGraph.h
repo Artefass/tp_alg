@@ -17,6 +17,9 @@ public:
     CMatrixGraph(const IGraph &graph)
     {
         adjacency_lists.resize(graph.VerticesCount());
+        for (std::vector<int> &vector: adjacency_lists)
+            vector.resize(graph.VerticesCount());
+
         for (int i = 0; i < adjacency_lists.size(); i++)
         {
             for (int &j: graph.GetNextVertices(i)){
