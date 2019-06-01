@@ -8,6 +8,8 @@
 #include <vector>
 #include <queue>
 #include <stack>
+#include <climits>
+#include <cassert>
 
 struct IGraph {
     virtual ~IGraph() = 0;
@@ -50,6 +52,102 @@ void BFS(const IGraph &graph, size_t vertex, void (*func)(size_t, int))
             {
                 visited[u] = true;
                 next_vertices.push(std::make_pair(u, u_edge));
+            }
+        }
+    }
+}
+
+void DFS(const IGraph &graph, size_t vertex, void (*func)(size_t, int))
+{
+    std::vector<bool>  visited(graph.VerticesCount(), false);
+    std::stack<std::pair<size_t, int>> next_vertices;
+
+    next_vertices.push(std::make_pair(vertex, 0));
+    visited[vertex] = true;
+
+    while ( !next_vertices.empty() )
+    {
+        std::pair<size_t, int> &ve = next_vertices.top();
+
+        size_t v      = ve.first;
+        int    v_edge = ve.second;
+
+        func(v, v_edge);
+
+        for (auto ue: graph.GetNextVertices(v))
+        {
+            size_t u      = ue.first;
+            int    u_edge = ue.second;
+
+            if ( !visited[u] )
+            {
+                visited[u] = true;
+                next_vertices.push(std::make_pair(u, u_edge));
+                break;
+            }
+        }
+
+        if ( ve == next_vertices.top() )
+            next_vertices.pop();
+    }
+}
+
+
+
+
+struct GreaterEdge;
+
+typedef std::pair<size_t, int> vertex_edge_t;
+typedef std::priority_queue<vertex_edge_t, std::vector<vertex_edge_t>,GreaterEdge> Queue;
+
+const int INFINITE = INT_MAX;
+
+struct GreaterEdge {
+    bool operator()(const vertex_edge_t &left, const vertex_edge_t &right)
+    {
+        return left.second > right.second;
+    }
+};
+
+void Prim(const IGraph &graph, IGraph &MST, size_t from)
+{
+    assert( graph.VerticesCount() == MST.VerticesCount() );
+    assert( 0 <= from && from < graph.VerticesCount() );
+
+    std::vector<int>    min_e(graph.VerticesCount(), INFINITE);
+    std::vector<size_t> parent(graph.VerticesCount(), -1);
+    Queue queue;
+
+    queue.emplace(std::make_pair(from, 0));
+    min_e[from] = 0;
+
+    while ( !queue.empty() )
+    {
+        vertex_edge_t ve = queue.top();
+        queue.pop();
+
+        size_t v      = ve.first;
+        int    v_edge = ve.second;
+
+        if ( min_e[v] < v_edge )
+            continue;
+
+        if ( v != from )
+        {
+            MST.AddEdge(parent[v], v, v_edge);
+            MST.AddEdge(v, parent[v], v_edge);
+        }
+
+        for ( vertex_edge_t &ue: graph.GetNextVertices(v) )
+        {
+            size_t u      = ue.first;
+            int    u_edge = ue.second;
+
+            if ( min_e[u] > u_edge )
+            {
+                min_e[u]  = u_edge;
+                parent[u] = v;
+                queue.emplace(std::make_pair(u, u_edge));
             }
         }
     }

@@ -2,97 +2,99 @@
 #include <cassert>
 #include <vector>
 #include <queue>
-#include <climits>
+#include <math.h>
+
+#include <random>
+#include <ctime>
 
 #include "IGraph.h"
 #include "CListGraph.h"
 
-struct GreaterEdge;
+//class DistanationFunctor
+//{
+//    int distanation = 0;
+//    size_t start_vertex;
+//    size_t end_vertex;
+//    bool   init = false;
+//public:
+//
+//    void operator()(const size_t vertex, const int edge)
+//    {
+//        if ( !init ) {
+//            start_vertex = vertex;
+//            init = true;
+//        }
+//
+//        distanation += edge;
+//    }
+//
+//    int GetDistanation(){
+//        if ( init )
+//
+//        return distanation;
+//    }
+//
+//};
 
-typedef std::pair<size_t, int> vertex_edge_t;
-typedef std::priority_queue<vertex_edge_t, std::vector<vertex_edge_t>,GreaterEdge> Queue;
+std::vector<std::pair<int, int>> BoxMullerGeneratePoints( size_t nPoints ) {
+    assert( nPoints > 0 );
+    double s;
+    double x, y;
+    int    ix, iy;
 
-const int INFINITE = INT_MAX;
+    std::vector<std::pair<int, int>> points(nPoints);
 
-struct GreaterEdge {
-    bool operator()(const vertex_edge_t &left, const vertex_edge_t &right)
-    {
-        return left.second > right.second;
+    srand( time( 0 ) ); // автоматическая рандомизация
+
+    for ( auto i = 0; i < nPoints; i++) {
+        do {
+            x = ((double) rand()) / RAND_MAX;
+            y = ((double) rand()) / RAND_MAX;
+
+            s = x*x + y*y;
+        } while (s <= 0 || s > 1);
+
+        ix = (int)(x * RAND_MAX);
+        iy = (int)(y * RAND_MAX);
+
+        points.emplace_back(std::make_pair(ix, iy));
     }
-};
 
-void Prim(const IGraph &graph, IGraph &MST, size_t from)
-{
-    assert( graph.VerticesCount() == MST.VerticesCount() );
-    assert( 0 <= from && from < graph.VerticesCount() );
-
-    std::vector<int>    min_e(graph.VerticesCount(), INFINITE);
-    std::vector<size_t> parent(graph.VerticesCount(), -1);
-    Queue queue;
-
-    queue.emplace(std::make_pair(from, 0));
-    min_e[from] = 0;
-
-    while ( !queue.empty() )
-    {
-        vertex_edge_t ve = queue.top();
-        queue.pop();
-
-        size_t v      = ve.first;
-        int    v_edge = ve.second;
-
-        if ( min_e[v] < v_edge )
-            continue;
-
-        if ( v != from )
-        {
-            MST.AddEdge(parent[v], v, v_edge);
-            MST.AddEdge(v, parent[v], v_edge);
-        }
-
-        for ( vertex_edge_t &ue: graph.GetNextVertices(v) )
-        {
-            size_t u      = ue.first;
-            int    u_edge = ue.second;
-
-            if ( min_e[u] > u_edge )
-            {
-                min_e[u]  = u_edge;
-                parent[u] = v;
-                queue.emplace(std::make_pair(u, u_edge));
-            }
-        }
-    }
+    return points;
 }
 
-int MST_weight = 0;
+double calcDistance(const std::pair<int, int> &lpoint, const std::pair<int, int> &rpoint) {
+    return std::sqrt(
+            (rpoint.first - lpoint.first) * (rpoint.first - lpoint.first) +
+            (rpoint.second - lpoint.second) * (rpoint.second - lpoint.second));
+}
 
 int main() {
-    size_t nvertices, nedges;
+    size_t nvertices;
     size_t from, to;
     int    edge;
 
-    std::cin >> nvertices >> nedges;
-
+    std::cin >> nvertices;
     CListGraph graph(nvertices);
 
-    for ( auto i = 0; i < nedges; i++ )
-    {
-        std::cin >> from >> to >> edge;
+    std::vector<std::pair<int, int>> random_points;
+    random_points = BoxMullerGeneratePoints(nvertices);
 
-        from--;
-        to--;
-        graph.AddEdge(from, to, edge);
-        graph.AddEdge(to, from, edge);
-    }
+    for ( size_t i = 0; i < nvertices; i++ )
+        std::cout << "(" << random_points[i].first << "," << random_points[i].second << ") ";
+    std::cout << std::endl;
+
+    for (size_t i = 0; i < nvertices; i++)
+        for ( size_t j = i + 1; j < nvertices; j++ ){
+            double distance = calcDistance(random_points[i], random_points[j]);
+            graph.AddEdge(i,j,distance);
+            graph.AddEdge(j,i,distance);
+        }
 
     CListGraph MST(nvertices);
-
     Prim(graph, MST, 0);
 
-    MST_weight = 0;
-    BFS(MST, 0, [](size_t vertex, int edge){ MST_weight += edge; });
+   // BFS(MST, 0, [](size_t vertex, int edge){ MST_weight += edge; });
 
-    std::cout << MST_weight;
     return 0;
 }
